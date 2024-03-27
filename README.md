@@ -24,4 +24,11 @@ Ensure that the cameras are properly connected and indexed correctly in the code
 
 https://www.printables.com/en/model/287938-dartboard-led-ring-and-camera-mount-v2/comments
 
+TODO
+- improve dart detection
+- show dartboard not drawn dartboard
+- finish 501 game settings
+- improve GUI
+- 2 players 
+
 
