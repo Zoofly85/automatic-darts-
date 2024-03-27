@@ -1,8 +1,10 @@
 import numpy as np
 import cv2
 import time
+import numpy as np
 import math
-from shapely.geometry import Point, LineString, Polygon
+from shapely.geometry import Point, LineString
+import shapely
 
 def cam2gray(cam):
     success, image = cam.read()
@@ -28,6 +30,8 @@ def getThreshold(cam, t):
     opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
     
     return opening
+
+
 
 def diff2blur(cam, t):
     _, t_plus = cam2gray(cam)
@@ -97,47 +101,6 @@ class KalmanFilter:
         I = np.eye(self.H.shape[1])
         self.P = np.dot(np.dot(I - np.dot(K, self.H), self.P),
                         (I - np.dot(K, self.H)).T) + np.dot(np.dot(K, self.R), K.T)
-        
-def find_dart_tip(skeleton, prev_tip_point, kalman_filter, blur):
-    # Find the contour of the skeleton
-    contours, _ = cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    if len(contours) > 0:
-        # Find the contour with the maximum area (assuming it represents the dart)
-        dart_contour = max(contours, key=cv2.contourArea)
-        
-        # Draw the dart contour on the blur image
-        cv2.drawContours(blur, [dart_contour], -1, (0, 255, 0), 1)
-        
-        # Convert the contour to a Shapely Polygon
-        dart_polygon = Polygon(dart_contour.reshape(-1, 2))
-        
-        # Draw the dart polygon on the blur image
-        dart_points = np.array(list(dart_polygon.exterior.coords), np.int32)
-        cv2.polylines(blur, [dart_points], True, (255, 0, 0), 1)
-        
-        # Find the lowest point of the dart contour
-        dart_points = dart_polygon.exterior.coords
-        lowest_point = max(dart_points, key=lambda x: x[1])
-        
-        # Draw the lowest point on the blur image
-        cv2.circle(blur, (int(lowest_point[0]), int(lowest_point[1])), 3, (0, 0, 255), -1)
-        
-        # Consider the lowest point as the dart tip
-        tip_point = lowest_point
-        
-        # Predict the dart tip position using the Kalman filter
-        predicted_tip = kalman_filter.predict()
-        
-        # Draw the predicted tip position on the blur image
-        cv2.circle(blur, (int(predicted_tip[0]), int(predicted_tip[1])), 3, (255, 255, 0), -1)
-        
-        # Update the Kalman filter with the observed dart tip positionq
-        kalman_filter.update(np.array([[tip_point[0]], [tip_point[1]]]))
-        
-        return int(tip_point[0]), int(tip_point[1])
-    
-    return None
 
 def getRealLocation(corners_final, mount, prev_tip_point=None, blur=None, kalman_filter=None):
     if mount == "right":
@@ -150,11 +113,8 @@ def getRealLocation(corners_final, mount, prev_tip_point=None, blur=None, kalman
     dart_contour = corners_final.reshape((-1, 1, 2))
     skeleton = cv2.ximgproc.thinning(cv2.drawContours(np.zeros_like(blur), [dart_contour], -1, 255, thickness=cv2.FILLED))
     
-    # Display the skeletonized image
-    cv2.imshow("Skeletonized Dart", skeleton)
-    
     # Detect the dart tip using skeletonization and Kalman filter
-    dart_tip = find_dart_tip(skeleton, prev_tip_point, kalman_filter, blur)
+    dart_tip = find_dart_tip(skeleton, prev_tip_point, kalman_filter)
     
     if dart_tip is not None:
         tip_x, tip_y = dart_tip
@@ -165,6 +125,37 @@ def getRealLocation(corners_final, mount, prev_tip_point=None, blur=None, kalman
         locationofdart = dart_tip
     
     return locationofdart, dart_tip
+
+from shapely.geometry import Point, LineString, Polygon
+
+def find_dart_tip(skeleton, prev_tip_point, kalman_filter):
+    # Find the contour of the skeleton
+    contours, _ = cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    if len(contours) > 0:
+        # Find the contour with the maximum area (assuming it represents the dart)
+        dart_contour = max(contours, key=cv2.contourArea)
+        
+        # Convert the contour to a Shapely Polygon
+        dart_polygon = Polygon(dart_contour.reshape(-1, 2))
+        
+        # Find the lowest point of the dart contour
+        dart_points = dart_polygon.exterior.coords
+        lowest_point = max(dart_points, key=lambda x: x[1])
+        
+        # Consider the lowest point as the dart tip
+        tip_point = lowest_point
+        
+        # Predict the dart tip position using the Kalman filter
+        predicted_tip = kalman_filter.predict()
+        
+        # Update the Kalman filter with the observed dart tip position
+        kalman_filter.update(np.array([[tip_point[0]], [tip_point[1]]]))
+        
+        return int(tip_point[0]), int(tip_point[1])
+    
+    return None
+
 
 def main():
     cam_R = cv2.VideoCapture(0)  # Use the appropriate camera index for the right camera
@@ -272,11 +263,6 @@ def main():
             cv2.imshow("Dart Detection - Right", blur_R)
             cv2.imshow("Dart Detection - Left", blur_L)
             cv2.imshow("Dart Detection - Center", blur_C)
-            
-            # Display the modified blur images
-            cv2.imshow("Dart Detection with Tip - Right", blur_R)
-            cv2.imshow("Dart Detection with Tip - Left", blur_L)
-            cv2.imshow("Dart Detection with Tip - Center", blur_C)
 
             # Update the reference frames after a dart has been detected
             success, t_R = cam2gray(cam_R)
@@ -310,4 +296,5 @@ def main():
     cv2.destroyAllWindows()
     
 if __name__ == "__main__":
+    main() 
     main()
