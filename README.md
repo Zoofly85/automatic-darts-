@@ -31,6 +31,8 @@ TODO
 - show dartboard not drawn dartboard
 - finish 501 game settings
 - improve GUI
-- 2 players 
+- 2 players
+
+If any good ideas or can improve on detection accuracy that would be great !_
 
 
