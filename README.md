@@ -33,6 +33,6 @@ TODO
 - improve GUI
 - 2 players
 
-If anyone has good ideas or can improve on detection accuracy that would be great !_
+If anyone has good ideas  for better dart detecton or can improve on detection accuracy that would be great ! https://discord.gg/kEVA28yR
 
 
