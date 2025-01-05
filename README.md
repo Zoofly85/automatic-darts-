@@ -34,6 +34,6 @@ TODO
 - 2 players
 
 If anyone has good ideas  for better dart detecton or can improve on detection accuracy that would be great !get in contact
-https://discord.gg/kEVA28yR
+https://discord.gg/MVN3RPxT
 
 
