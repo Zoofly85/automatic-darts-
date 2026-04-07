@@ -263,7 +263,7 @@ def find_dart_tip(skeleton, prev_tip_point, kalman_filter):
         dart_polygon = Polygon(dart_contour.reshape(-1, 2))
 
         # Find the lowest point of the dart contour
-        dart_points = dart_polygon.exterior.coords
+        dart_points = list(dart_polygon.exterior.coords)
         lowest_point = max(dart_points, key=lambda x: x[1])
 
         # Adjust the tip coordinates by half of the tip's diameter

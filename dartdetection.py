@@ -1,10 +1,8 @@
 import numpy as np
 import cv2
 import time
-import numpy as np
 import math
-from shapely.geometry import Point, LineString
-import shapely
+from shapely.geometry import Point, LineString, Polygon
 
 def cam2gray(cam):
     success, image = cam.read()
@@ -126,8 +124,6 @@ def getRealLocation(corners_final, mount, prev_tip_point=None, blur=None, kalman
     
     return locationofdart, dart_tip
 
-from shapely.geometry import Point, LineString, Polygon
-
 def find_dart_tip(skeleton, prev_tip_point, kalman_filter):
     # Find the contour of the skeleton
     contours, _ = cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -140,7 +136,7 @@ def find_dart_tip(skeleton, prev_tip_point, kalman_filter):
         dart_polygon = Polygon(dart_contour.reshape(-1, 2))
         
         # Find the lowest point of the dart contour
-        dart_points = dart_polygon.exterior.coords
+        dart_points = list(dart_polygon.exterior.coords)
         lowest_point = max(dart_points, key=lambda x: x[1])
         
         # Consider the lowest point as the dart tip
@@ -296,5 +292,4 @@ def main():
     cv2.destroyAllWindows()
     
 if __name__ == "__main__":
-    main() 
     main()
